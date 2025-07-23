@@ -10,6 +10,22 @@ interface StatsData {
   totalPermissions: number
 }
 
+interface User {
+  isActive: boolean
+}
+
+interface Role {
+  permissions: unknown[]
+}
+
+interface UsersResponse {
+  users: User[]
+}
+
+interface RolesResponse {
+  roles: Role[]
+}
+
 export function StatsCards() {
   const [stats, setStats] = useState<StatsData>({
     totalUsers: 0,
@@ -31,11 +47,11 @@ export function StatsCards() {
       ])
 
       if (usersRes.ok && rolesRes.ok) {
-        const usersData = await usersRes.json()
-        const rolesData = await rolesRes.json()
+        const usersData: UsersResponse = await usersRes.json()
+        const rolesData: RolesResponse = await rolesRes.json()
 
-        const activeUsers = usersData.users.filter((user: any) => user.isActive).length
-        const totalPermissions = rolesData.roles.reduce((acc: number, role: any) => 
+        const activeUsers = usersData.users.filter((user: User) => user.isActive).length
+        const totalPermissions = rolesData.roles.reduce((acc: number, role: Role) => 
           acc + role.permissions.length, 0
         )
 
