@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { UsersIcon, ShieldCheckIcon, ChartBarIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface StatsData {
   totalUsers: number
@@ -55,32 +55,24 @@ export function StatsCards() {
 
   const statsItems = [
     {
-      name: 'Total Users',
+      title: 'Total Users',
       value: stats.totalUsers,
-      icon: UsersIcon,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      description: 'All registered users',
     },
     {
-      name: 'Active Users',
+      title: 'Active Users',
       value: stats.activeUsers,
-      icon: CheckCircleIcon,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
+      description: 'Currently active users',
     },
     {
-      name: 'Total Roles',
+      title: 'Total Roles',
       value: stats.totalRoles,
-      icon: ShieldCheckIcon,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      description: 'Available user roles',
     },
     {
-      name: 'Permissions',
+      title: 'Permissions',
       value: stats.totalPermissions,
-      icon: ChartBarIcon,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100'
+      description: 'Total permissions granted',
     }
   ]
 
@@ -88,10 +80,14 @@ export function StatsCards() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-          </div>
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <div className="animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-muted rounded w-1/2"></div>
+              </div>
+            </CardHeader>
+          </Card>
         ))}
       </div>
     )
@@ -100,17 +96,19 @@ export function StatsCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {statsItems.map((item) => (
-        <div key={item.name} className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className={`p-3 rounded-full ${item.bgColor} mr-4`}>
-              <item.icon className={`h-6 w-6 ${item.color}`} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">{item.name}</p>
-              <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
-            </div>
-          </div>
-        </div>
+        <Card key={item.title}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {item.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{item.value}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {item.description}
+            </p>
+          </CardContent>
+        </Card>
       ))}
     </div>
   )

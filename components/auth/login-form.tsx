@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export function LoginForm() {
   const [formData, setFormData] = useState({
@@ -26,7 +29,7 @@ export function LoginForm() {
       const result = await login(formData.email, formData.password)
       
       if (result.success) {
-        router.push('/admin') // Redirect to admin dashboard
+        router.push('/admin')
         router.refresh()
       } else {
         setError(result.error || 'Login failed')
@@ -44,24 +47,21 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white shadow-lg rounded-lg px-8 py-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
-          <p className="text-gray-600 mt-2">Sign in to your admin dashboard</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Admin Login</CardTitle>
+        <CardDescription>Sign in to your admin dashboard</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
               name="email"
@@ -74,10 +74,8 @@ export function LoginForm() {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               name="password"
@@ -100,11 +98,11 @@ export function LoginForm() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Demo credentials: admin@example.com / admin123
+          <p className="text-sm text-muted-foreground">
+            Demo: admin@example.com / admin123
           </p>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

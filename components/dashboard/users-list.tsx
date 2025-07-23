@@ -10,7 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface User {
   id: string
@@ -35,6 +37,7 @@ export function UsersList({ onEditUser, onCreateUser, refreshTrigger }: UsersLis
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchUsers()
@@ -43,6 +46,7 @@ export function UsersList({ onEditUser, onCreateUser, refreshTrigger }: UsersLis
   const fetchUsers = async () => {
     try {
       setLoading(true)
+      setError('')
       const response = await fetch('/api/users', {
         credentials: 'include'
       })
@@ -51,17 +55,18 @@ export function UsersList({ onEditUser, onCreateUser, refreshTrigger }: UsersLis
         const data = await response.json()
         setUsers(data.users)
       } else {
-        console.error('Failed to fetch users')
+        setError('Failed to fetch users')
       }
     } catch (error) {
       console.error('Error fetching users:', error)
+      setError('Failed to load users')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) {
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
       return
     }
 
@@ -94,97 +99,102 @@ export function UsersList({ onEditUser, onCreateUser, refreshTrigger }: UsersLis
     })
   }
 
-  if (loading) {
+  if (error) {
     return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-4 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     )
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200">
+    <Card>
+      <CardHeader>
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-medium text-gray-900">Users</h2>
-          <Button onClick={onCreateUser} size="sm">
-            <PlusIcon className="h-4 w-4 mr-2" />
+          <div>
+            <CardTitle>Users</CardTitle>
+            <CardDescription>
+              Manage users and their roles in the system.
+            </CardDescription>
+          </div>
+          <Button onClick={onCreateUser}>
+            <span className="mr-2">+</span>
             Add User
           </Button>
         </div>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                No users found. Create your first user to get started.
-              </TableCell>
-            </TableRow>
-          ) : (
-            users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                    {user.role.name}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {user.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </TableCell>
-                <TableCell>{formatDate(user.createdAt)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEditUser(user)}
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user.id)}
-                      disabled={deleting === user.id}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-muted rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            </TableHeader>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    No users found. Create your first user to get started.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="capitalize">
+                        {user.role.name}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.isActive ? "default" : "destructive"}>
+                        {user.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(user.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEditUser(user)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          disabled={deleting === user.id}
+                        >
+                          {deleting === user.id ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   )
 }

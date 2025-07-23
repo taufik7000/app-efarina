@@ -2,8 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface Role {
   id: string
@@ -30,7 +47,13 @@ interface UserFormModalProps {
 }
 
 export function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    email: string
+    name: string
+    password?: string
+    roleId: string
+    isActive: boolean
+  }>({
     email: '',
     name: '',
     password: '',
@@ -61,6 +84,7 @@ export function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalPr
           isActive: true
         })
       }
+      setError('')
     }
   }, [isOpen, user])
 
@@ -118,121 +142,106 @@ export function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalPr
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
+  const handleChange = (name: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: value
     }))
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            {user ? 'Edit User' : 'Create User'}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{user ? 'Edit User' : 'Create User'}</DialogTitle>
+          <DialogDescription>
+            {user ? 'Update user information and settings.' : 'Add a new user to the system.'}
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Name
-            </label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              disabled={loading}
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter full name"
+                required
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter email address"
+                required
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="password">
+                Password {user && <span className="text-muted-foreground">(leave empty to keep current)</span>}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter password"
+                required={!user}
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="roleId">Role</Label>
+              <Select 
+                value={formData.roleId} 
+                onValueChange={(value) => handleChange('roleId', value)}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      <span className="capitalize">{role.name}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) => handleChange('isActive', checked as boolean)}
+                disabled={loading}
+              />
+              <Label htmlFor="isActive" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Active user
+              </Label>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password {user && '(leave empty to keep current)'}
-            </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required={!user}
-              value={formData.password}
-              onChange={handleChange}
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="roleId" className="block text-sm font-medium text-gray-700 mb-2">
-              Role
-            </label>
-            <select
-              id="roleId"
-              name="roleId"
-              required
-              value={formData.roleId}
-              onChange={handleChange}
-              disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select a role</option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              id="isActive"
-              name="isActive"
-              type="checkbox"
-              checked={formData.isActive}
-              onChange={handleChange}
-              disabled={loading}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
-              Active
-            </label>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -245,11 +254,11 @@ export function UserFormModal({ isOpen, onClose, onSave, user }: UserFormModalPr
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Saving...' : (user ? 'Update' : 'Create')}
+              {loading ? 'Saving...' : (user ? 'Update User' : 'Create User')}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
